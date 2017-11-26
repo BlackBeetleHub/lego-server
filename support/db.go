@@ -14,31 +14,33 @@ type Account struct {
 type Connector interface {
 	Connect() error
 	Close()
+	Get(selector string, dest interface{})
+	Insert(inset string)
 }
 
 type PostgresConnector struct {
-	connectorString string
-	Session         *sqlx.DB
+	ConnectorString string
+	session         *sqlx.DB
 }
 
 func (psql *PostgresConnector) Connect() error {
-	db, err := sqlx.Connect("postgres", "user=postgres dbname=test_drive sslmode=disable")
-	psql.Session = db
+	db, err := sqlx.Connect("postgres", psql.ConnectorString)
+	psql.session = db
 	return err
 }
 
 func (psql *PostgresConnector) Close() {
-	psql.Session.Close()
+	psql.session.Close()
 }
 
 func (psql *PostgresConnector) Get(selector string, dest interface{}) {
-	err := psql.Session.Get(dest, selector)
+	err := psql.session.Get(dest, selector)
 	if err != nil {
 		panic(err.Error())
 	}
 }
 
 func (psql *PostgresConnector) Insert (insert string) {
-	resultTx := psql.Session.MustExec(insert)
+	resultTx := psql.session.MustExec(insert)
 	log.Info(resultTx)
 }
