@@ -1,6 +1,6 @@
 package json
 
-type Details struct {
+type 	Details struct {
 	Email      string `json:"email"`
 	UserName   string `json:"user_name"`
 	FullName   string `json:"full_name"`

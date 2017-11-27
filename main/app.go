@@ -3,15 +3,15 @@ package main
 import (
 	"github.com/easy/lego/support"
 	"github.com/BurntSushi/toml"
-	"github.com/buaazp/fasthttprouter"
-	"github.com/valyala/fasthttp"
-	"log"
+	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
+	"net/http"
 )
 
 type App struct {
 	config    *support.Config
 	connector support.Connector
-	router    *fasthttprouter.Router
+	router    *httprouter.Router
 }
 
 func (app *App) GetConfig() *support.Config {
@@ -24,12 +24,10 @@ func (app *App) Init(path string) {
 		panic("Error init config: " + err.Error())
 	}
 	app.connector = &support.PostgresConnector{ConnectorString: app.config.GetDBStringConnector()}
-	app.router = fasthttprouter.New()
-
+	app.router = httprouter.New()
 	app.router.GET("/", app.Index)
 	app.router.GET("/get_all_words", app.GetAllWords)
 	app.router.POST("/create_account", app.CreateAccount)
-
 }
 
 func (app *App) Start() {
@@ -37,9 +35,9 @@ func (app *App) Start() {
 	if err != nil {
 		panic(err.Error())
 	}
-	address := app.config.ListenIP + ":" + app.config.ListenPort;
-	log.Fatal(fasthttp.ListenAndServe(address, app.router.Handler))
 
+	handler := cors.Default().Handler(app.router)
+	http.ListenAndServe("0.0.0.0:4000", handler)
 }
 
 func (app *App) Stop() {
