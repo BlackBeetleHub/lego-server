@@ -28,6 +28,8 @@ func (app *App) Init(path string) {
 	app.router.GET("/", app.Index)
 	app.router.GET("/get_all_words", app.GetAllWords)
 	app.router.POST("/create_account", app.CreateAccount)
+	app.router.GET("/add_custom_word", app.AddCustomWord)
+	app.router.GET("/account_id", app.AccountID)
 }
 
 func (app *App) Start() {
