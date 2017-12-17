@@ -1,4 +1,4 @@
-package support
+package db
 
 import (
 	_ "github.com/lib/pq"
@@ -15,6 +15,7 @@ type Connector interface {
 	Connect() error
 	Close()
 	Get(selector string, dest interface{})
+	Select(selector string, dest interface{})
 	Insert(inset string)
 }
 
@@ -35,6 +36,13 @@ func (psql *PostgresConnector) Close() {
 
 func (psql *PostgresConnector) Get(selector string, dest interface{}) {
 	err := psql.session.Get(dest, selector)
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func (psql *PostgresConnector) Select(selector string, dest interface{}) {
+	err := psql.session.Select(dest, selector)
 	if err != nil {
 		panic(err.Error())
 	}

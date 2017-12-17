@@ -6,11 +6,12 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 	"net/http"
+	"github.com/easy/lego/db"
 )
 
 type App struct {
 	config    *support.Config
-	connector support.Connector
+	connector db.Connector
 	router    *httprouter.Router
 }
 
@@ -23,13 +24,14 @@ func (app *App) Init(path string) {
 	if err != nil {
 		panic("Error init config: " + err.Error())
 	}
-	app.connector = &support.PostgresConnector{ConnectorString: app.config.GetDBStringConnector()}
+	app.connector = &db.PostgresConnector{ConnectorString: app.config.GetDBStringConnector()}
 	app.router = httprouter.New()
 	app.router.GET("/", app.Index)
 	app.router.GET("/get_all_words", app.GetAllWords)
 	app.router.POST("/create_account", app.CreateAccount)
 	app.router.GET("/add_custom_word", app.AddCustomWord)
 	app.router.GET("/account_id", app.AccountID)
+	app.router.GET("/get_all_custom_words", app.GetAllCustomWords)
 }
 
 func (app *App) Start() {

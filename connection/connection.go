@@ -8,6 +8,8 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strconv"
+	"log"
+	"errors"
 )
 
 var cookieJar, _ = cookiejar.New(nil)
@@ -44,6 +46,11 @@ func (s *SimpleConnector) Connect() error {
 		"password": {s.Pass},
 	}
 	resp, err := client.PostForm(authRequest, authParams)
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Error connect to lingualeo account: %s", resp)
+		err = errors.New("Error connect to account")
+	}
+
 	defer resp.Body.Close()
 	return err
 }
