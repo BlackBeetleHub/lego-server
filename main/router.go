@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/easy/lego/connection"
 	"encoding/json"
-	entries "github.com/easy/lego/json"
+	jsonEntries "github.com/easy/lego/json"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
-	entries2 "github.com/easy/lego/db/entries"
+	databaseEntries "github.com/easy/lego/db/entries"
 	"log"
 )
 
@@ -47,31 +47,38 @@ func (app *App) CreateAccount(w http.ResponseWriter, r *http.Request, _ httprout
 	strPass := r.FormValue("pass")
 	strDetails := r.FormValue("details")
 
-	var details entries.Details
+	var details jsonEntries.Details
 	err := json.Unmarshal([]byte(strDetails), &details)
 	if err != nil {
 		fmt.Fprintf(w, string(err.Error()))
 		return;
 	}
 
-	fmt.Fprintf(w, "200 OK")
 	strInsertQ := "INSERT INTO account (details, hash) VALUES ('" + strDetails + "','" + strPass + "');"
 	app.connector.Insert(strInsertQ)
+	selector := "SELECT id FROM account where details->>'email'='" + details.Email + "'"
+	var account string
+	app.connector.Get(selector, &account)
+	cookie := http.Cookie{Name: "account_id", Value: account}
+	http.SetCookie(w, &cookie)
+	http.Redirect(w, r, app.GetConfig().WebUrlFront+"/#/analyze", 301)
 }
 
 //Endpoint: Auth user
 //Params: email, password
 //Return result operation add
-func (app *App) LogIn (w http.ResponseWriter, r * http.Request, _ httprouter.Params) {
+func (app *App) LogIn(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	strEmail := r.FormValue("email")
 	strPass := r.FormValue("password")
-	selector := "SELECT * FROM account where details->>'email'='"+ strEmail +"'"
-	var account entries2.Account
+	selector := "SELECT * FROM account where details->>'email'='" + strEmail + "'"
+	fmt.Println(selector)
+	var account databaseEntries.Account
 	app.connector.Get(selector, &account)
 	if account.Hash != strPass {
 		fmt.Fprint(w, "400")
 		return
 	}
+	fmt.Fprint(w, strconv.Itoa(account.ID))
 }
 
 //Endpoint: Add know word in db
@@ -84,21 +91,19 @@ func (app *App) AddCustomWord(w http.ResponseWriter, r *http.Request, _ httprout
 
 	isWordExistInDB := false
 	fmt.Println(wordValue)
-	app.connector.Get(entries2.ExistWord(wordValue), &isWordExistInDB)
+	app.connector.Get(databaseEntries.ExistWord(wordValue), &isWordExistInDB)
 
 	if !isWordExistInDB {
-		app.connector.Insert(entries2.AddWord(wordValue))
+		app.connector.Insert(databaseEntries.AddWord(wordValue))
 	}
 
 	wordID := ""
 
-	app.connector.Get(entries2.GetWordID(wordValue), &wordID)
-	app.connector.Insert(entries2.AddUserWord(accountID, wordID))
+	app.connector.Get(databaseEntries.GetWordID(wordValue), &wordID)
+	app.connector.Insert(databaseEntries.AddUserWord(accountID, wordID))
 
 	fmt.Fprintf(w, "200 OK")
 }
-
-//TODO: add endpoint for add services
 
 //Endpoint: Get account_id from email (details->>'email' = ?)
 //params: email
@@ -107,20 +112,23 @@ func (app *App) AccountID(w http.ResponseWriter, r *http.Request, _ httprouter.P
 	r.ParseForm()
 	strEmail := r.Form.Get("email")
 	println(string(strEmail) + " ? empty ?")
-	selector := "SELECT id FROM account where details->>'email'='"+ strEmail +"'"
+	selector := "SELECT id FROM account where details->>'email'='" + strEmail + "'"
 	var id int
 	app.connector.Get(selector, &id)
 	fmt.Fprintf(w, strconv.Itoa(id))
 }
 
-
+//Endpoint: Get array word by user id
+//params: id_user
+//return [json.Words]
 func (app *App) GetAllCustomWords(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	fmt.Println("Yes")
 	accountID := r.FormValue("id_user")
-	words := []entries2.Word{}
-	app.connector.Select(entries2.GetAllCustomWords(accountID), &words)
+	fmt.Println(accountID)
+	words := []databaseEntries.Word{}
+	app.connector.Select(databaseEntries.GetAllCustomWords(accountID), &words)
 
-	responseJson,err := json.Marshal(words)
+	responseJson, err := json.Marshal(words)
 	if err != nil {
 		fmt.Println(err)
 	}

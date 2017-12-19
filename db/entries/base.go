@@ -9,7 +9,7 @@ const InsertString = "INSERT INTO "
 type Account struct {
 	ID          int    `db:"id"`
 	Details     string `db:"details"`
-	Hash 		string `db:"hasj"`
+	Hash 		string `db:"hash"`
 }
 
 type Word struct {

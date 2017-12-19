@@ -8,13 +8,14 @@ import (
 var schema = `
 CREATE TABLE account (
     id      SERIAL  NOT NULL,
-    details TEXT    NOT NULL,
+    details JSONB    NOT NULL,
+    hash    TEXT    NOT NULL,
     PRIMARY KEY (ID)
 );
 
-CREATE TABLE account_words (
-    account_id   int,
-    word_id      int
+CREATE TABLE account_word (
+    account_id   int NOT NULL,
+    word_id      int NOT NULL
 );
 
 CREATE TABLE service (

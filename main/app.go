@@ -26,12 +26,15 @@ func (app *App) Init(path string) {
 	}
 	app.connector = &db.PostgresConnector{ConnectorString: app.config.GetDBStringConnector()}
 	app.router = httprouter.New()
+
 	app.router.GET("/", app.Index)
-	app.router.GET("/get_all_words", app.GetAllWords)
-	app.router.POST("/create_account", app.CreateAccount)
-	app.router.GET("/add_custom_word", app.AddCustomWord)
 	app.router.GET("/account_id", app.AccountID)
+	app.router.GET("/get_all_words", app.GetAllWords)
 	app.router.GET("/get_all_custom_words", app.GetAllCustomWords)
+	app.router.GET("/add_custom_word", app.AddCustomWord)
+
+	app.router.POST("/login", app.LogIn)
+	app.router.POST("/create_account", app.CreateAccount)
 }
 
 func (app *App) Start() {
@@ -39,7 +42,6 @@ func (app *App) Start() {
 	if err != nil {
 		panic(err.Error())
 	}
-
 	handler := cors.Default().Handler(app.router)
 	http.ListenAndServe("0.0.0.0:4000", handler)
 }

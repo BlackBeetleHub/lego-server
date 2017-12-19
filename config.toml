@@ -1,3 +1,4 @@
 Database = "user=postgres dbname=test_drive sslmode=disable"
 ListenIP = "0.0.0.0"
 ListenPort = "4000"
+webUrlFront = "http://localhost:8080"

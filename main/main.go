@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-func main(){
+func main() {
 	app := App{}
 	pathConfig := os.Args
 	println(pathConfig[1])
